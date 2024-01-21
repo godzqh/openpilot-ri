@@ -480,12 +480,12 @@ FW_VERSIONS = {
 
 
 DBC = {
-  CAR.CX5: dbc_dict('mazda_2017', None),
-  CAR.CX9: dbc_dict('mazda_2017', None),
-  CAR.MAZDA3: dbc_dict('mazda_2017', None),
-  CAR.MAZDA6: dbc_dict('mazda_2017', None),
-  CAR.CX9_2021: dbc_dict('mazda_2017', None),
-  CAR.CX5_2022: dbc_dict('mazda_2017', None),
+  CAR.CX5: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX9: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.MAZDA3: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.MAZDA6: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX9_2021: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX5_2022: dbc_dict('mazda_2017', 'mazda_radar'),
   CAR.MAZDA3_2019: dbc_dict('mazda_2019', None),
   CAR.CX_30: dbc_dict('mazda_2019', None),
   CAR.CX_50: dbc_dict('mazda_2019', None),

@@ -154,10 +154,13 @@ class CarState(CarStateBase):
 
     # TODO: the signal used for available seems to be the adaptive cruise signal, instead of the main on
     #       it should be used for carState.cruiseState.nonAdaptive instead
-    ret.cruiseState.available = cp.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
-    ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
+    ret.cruiseState.available = cp_cam.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
+    ret.cruiseState.enabled = cp.vl["CRZ_EVENTS"]["CRUISE_ACTIVE_CAR_MOVING"] == 1
     ret.cruiseState.standstill = cp.vl["PEDALS"]["STANDSTILL"] == 1
     ret.cruiseState.speed = cp.vl["CRZ_EVENTS"]["CRZ_SPEED"] * CV.KPH_TO_MS
+
+    self.crz_info = copy.copy(cp_cam.vl["CRZ_INFO"])
+    self.crz_cntr = copy.copy(cp_cam.vl["CRZ_CTRL"])
 
     # On if no driver torque the last 5 seconds
     if self.CP.carFingerprint not in (CAR.CX5_2022, CAR.CX9_2021): 
@@ -174,6 +177,10 @@ class CarState(CarStateBase):
     self.cam_lkas = cp_cam.vl["CAM_LKAS"]
     self.cam_laneinfo = cp_cam.vl["CAM_LANEINFO"]
     ret.steerFaultPermanent = cp_cam.vl["CAM_LKAS"]["ERR_BIT_1"] == 1
+
+
+    self.cp_cam = cp_cam
+    self.cp = cp
 
     return ret
   
@@ -211,7 +218,6 @@ class CarState(CarStateBase):
       messages += CarState.get_ti_messages(CP)
       messages += [
         ("ENGINE_DATA", 100),
-        ("CRZ_CTRL", 50),
         ("CRZ_EVENTS", 50),
         ("CRZ_BTNS", 10),
         ("PEDALS", 50),
@@ -243,6 +249,14 @@ class CarState(CarStateBase):
         # sig_address, frequency
         ("CAM_LANEINFO", 2),
         ("CAM_LKAS", 16),
+        ("CRZ_CTRL",50), 
+        ("CRZ_INFO",50),
+      ]
+
+      for addr in range(361,367):
+        msg = f"RADAR_{addr}"
+        messages += [
+        (msg, 10),
       ]
 
     if CP.carFingerprint in GEN2:

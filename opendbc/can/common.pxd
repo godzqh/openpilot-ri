@@ -23,6 +23,7 @@ cdef extern from "common_dbc.h":
     CHRYSLER_CHECKSUM,
     HKG_CAN_FD_CHECKSUM,
     MAZDA2019_CHECKSUM,
+    MAZDA_CHECKSUM,
 
   cdef struct Signal:
     string name
@@ -63,7 +64,7 @@ cdef extern from "common_dbc.h":
 
 
 cdef extern from "common.h":
-  cdef const DBC* dbc_lookup(const string)
+  cdef const DBC* dbc_lookup(const string) except +
 
   cdef cppclass CANParser:
     bool can_valid

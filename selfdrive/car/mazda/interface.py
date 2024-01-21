@@ -35,7 +35,16 @@ class CarInterface(CarInterfaceBase):
     if candidate in GEN1:
       ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.mazda)]
       ret.steerActuatorDelay = 0.1
-      
+      ret.openpilotLongitudinalControl = True
+      ret.longitudinalTuning.kpBP = [0., 5., 30.]
+      ret.longitudinalTuning.kpV = [1.0, 0.5, 0.1]
+      ret.longitudinalTuning.kiBP = [0., 5., 20., 30.]
+      ret.longitudinalTuning.kiV = [0.36, 0.23, 0.17, 0.1]
+      ret.longitudinalTuning.deadzoneBP = [0.0, 30.0]
+      ret.longitudinalTuning.deadzoneV = [0.0, 0.03]
+      ret.longitudinalActuatorDelayLowerBound = 0.3
+      ret.longitudinalActuatorDelayUpperBound = 1.5
+
     if candidate in GEN2:
       ret.experimentalLongitudinalAvailable = True
       ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.mazda2019)]
@@ -49,7 +58,7 @@ class CarInterface(CarInterfaceBase):
       ret.startingState = True
       ret.steerActuatorDelay = 0.3
       
-    ret.radarUnavailable = True
+    ret.radarUnavailable = False
 
     ret.dashcamOnly = False
 
