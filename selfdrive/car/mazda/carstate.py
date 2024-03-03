@@ -5,7 +5,7 @@ from openpilot.common.conversions import Conversions as CV
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.mazda.values import DBC, LKAS_LIMITS, GEN1, GEN2, TI_STATE, CAR, CarControllerParams
+from openpilot.selfdrive.car.mazda.values import DBC, LKAS_LIMITS, GEN1, GEN2, TI_STATE, CAR, CarControllerParams, MazdaFlags
 
 class CarState(CarStateBase):
   def __init__(self, CP):
@@ -163,10 +163,18 @@ class CarState(CarStateBase):
 
     # TODO: the signal used for available seems to be the adaptive cruise signal, instead of the main on
     #       it should be used for carState.cruiseState.nonAdaptive instead
-    ret.cruiseState.available = cp.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
-    ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
     ret.cruiseState.standstill = cp.vl["PEDALS"]["STANDSTILL"] == 1
     ret.cruiseState.speed = cp.vl["CRZ_EVENTS"]["CRZ_SPEED"] * CV.KPH_TO_MS
+
+    if self.CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
+      self.crz_info = copy.copy(cp_cam.vl["CRZ_INFO"])
+      self.crz_cntr = copy.copy(cp_cam.vl["CRZ_CTRL"])
+      ret.cruiseState.enabled = cp.vl["PEDALS"]["ACC_ACTIVE"] == 1
+      ret.cruiseState.available = cp.vl["PEDALS"]["CRZ_AVAILABLE"] == 1
+    else:
+      ret.cruiseState.available = cp.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
+      ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
+
 
     # On if no driver torque the last 5 seconds
     if self.CP.carFingerprint not in (CAR.CX5_2022, CAR.CX9_2021): 
@@ -183,6 +191,8 @@ class CarState(CarStateBase):
     self.cam_lkas = cp_cam.vl["CAM_LKAS"]
     self.cam_laneinfo = cp_cam.vl["CAM_LANEINFO"]
     ret.steerFaultPermanent = cp_cam.vl["CAM_LKAS"]["ERR_BIT_1"] == 1
+    self.cp = cp
+    self.cp_cam = cp_cam
 
     return ret
   
@@ -220,7 +230,6 @@ class CarState(CarStateBase):
       messages += CarState.get_ti_messages(CP)
       messages += [
         ("ENGINE_DATA", 100),
-        ("CRZ_CTRL", 50),
         ("CRZ_EVENTS", 50),
         ("CRZ_BTNS", 10),
         ("PEDALS", 50),
@@ -229,6 +238,10 @@ class CarState(CarStateBase):
         ("DOORS", 10),
         ("GEAR", 20),
         ("BSM", 10),
+      ]
+      if not CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
+        messages += [
+          ("CRZ_CTRL", 50),
       ]
       
     if CP.carFingerprint in GEN2:
@@ -253,6 +266,14 @@ class CarState(CarStateBase):
         ("CAM_LANEINFO", 2),
         ("CAM_LKAS", 16),
       ]
+      if CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
+        messages += [
+          ("CRZ_CTRL",50),
+          ("CRZ_INFO",50),
+        ]
+        for addr in range(361,367):
+          msg = f"RADAR_{addr}"
+          messages += [(msg,10),]
 
     if CP.carFingerprint in GEN2:
       messages += [

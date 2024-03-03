@@ -2,6 +2,7 @@ from openpilot.selfdrive.car.mazda.values import GEN1, Buttons
 
 from selfdrive.car.mazda.values import GEN1, GEN2, Buttons
 from common.params import Params
+from openpilot.common.numpy_fast import clip
 
 
 def create_steering_control(packer, car_fingerprint, frame, apply_steer, lkas):
@@ -180,3 +181,61 @@ def create_acc_cmd(self, packer, CS, CC, hold, resume):
 
   return packer.make_can_msg(msg_name, bus, values)
 
+STATIC_DATA_21B = [0x01FFE000, 0x00000000]
+STATIC_DATA_361 = [0xFFF7FEFE, 0x1FC]
+STATIC_DATA_362 = [0xFFF7FEFE, 0x1FC]
+STATIC_DATA_363 = [0xFFF7FEFE, 0x1FC0000]
+STATIC_DATA_364 = [0xFFF7FEFE, 0x1FC0000]
+STATIC_DATA_365 = [0xFFF7FE7F, 0xFBFF3FC]
+STATIC_DATA_366 = [0xFFF7FE7F, 0xFBFF3FC]
+static_data_list = [STATIC_DATA_361, STATIC_DATA_362, STATIC_DATA_363, STATIC_DATA_364, STATIC_DATA_365, STATIC_DATA_366]
+
+
+def create_radar_command(packer, frame, CC, CS):
+  accel = 0
+  ret = []
+  crz_ctrl = CS.crz_cntr
+  crz_info = CS.crz_info
+
+  if Params().get_bool("ExperimentalLongitudinalEnabled") and CC.longActive: # this is set true in longcontrol.py
+    accel = CC.actuators.accel * 1170
+    accel = accel if accel < 1000 else 1000
+  else:
+    accel = int(crz_info["ACCEL_CMD"])
+
+  crz_info["ACC_ACTIVE"] = int(CC.longActive)
+  crz_info["ACC_SET_ALLOWED"] = int(bool(int(CS.cp.vl["GEAR"]["GEAR"]) & 4)) # we can set ACC_SET_ALLOWED bit when in drive. Allows crz to be set from 1kmh.
+  crz_info["CRZ_ENDED"] = 0 # this should keep acc on down to 5km/h on my 2018 M3
+  crz_info["ACCEL_CMD"] = accel
+  
+  crz_ctrl["CRZ_ACTIVE"] = int(CC.longActive)
+  crz_ctrl["ACC_ACTIVE_2"] = int(CC.longActive)
+  crz_ctrl["DISABLE_TIMER_1"] = 0
+  crz_ctrl["DISABLE_TIMER_2"] = 0
+  
+  ret.append(packer.make_can_msg("CRZ_INFO", 0, crz_info))
+  ret.append(packer.make_can_msg("CRZ_CTRL", 0, crz_ctrl))
+  # convert steering angle to radar units and clip to range
+  steer_angle = (CS.out.steeringAngleDeg *-17.4) + 2048
+
+  if (frame % 10 == 0):
+    for i, addr in enumerate(range(361,367)):
+      addr_name = f"RADAR_{addr}"
+      msg = CS.cp_cam.vl[addr_name]
+      values = {
+        "MSGS_1" : static_data_list[i][0],
+        "MSGS_2" : static_data_list[i][1],
+        "CTR"    : int(msg["CTR"]) #frame % 16
+      }
+      if addr == 361:
+        values.update({
+          "INVERSE_SPEED" : int(CS.out.vEgo * -4.4),
+          "BIT" : 1,
+        })
+      if addr == 362:
+        values.update({  
+          "CLIPPED_STEER_ANGLE" : int(clip(steer_angle, 0, 4092)),
+        })
+      ret.append(packer.make_can_msg(addr_name, 0, values))
+
+  return ret

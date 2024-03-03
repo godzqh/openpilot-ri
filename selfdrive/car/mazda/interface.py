@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from cereal import car
 from openpilot.common.conversions import Conversions as CV
-from openpilot.selfdrive.car.mazda.values import CAR, LKAS_LIMITS, GEN2, GEN1
+from openpilot.selfdrive.car.mazda.values import CAR, LKAS_LIMITS, GEN2, GEN1, MazdaFlags
 from openpilot.selfdrive.car import get_safety_config
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD
 from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
@@ -17,11 +17,27 @@ class CarInterface(CarInterfaceBase):
   @staticmethod
   def _get_params(ret, params, candidate, fingerprint, car_fw, experimental_long, docs):
     ret.carName = "mazda"
-    p = Params()
+    ret.radarUnavailable = True
     if candidate in GEN1:
       ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.mazda)]
-      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_MAZDA_ENABLE_TI
       ret.steerActuatorDelay = 0.1
+      if params.get_bool("EnableTI"):
+        ret.flags |= MazdaFlags.TORQUE_INTERCEPTOR.value
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_MAZDA_ENABLE_TI
+      if params.get_bool('EnableRI'):
+        ret.experimentalLongitudinalAvailable = True
+        ret.radarUnavailable = False
+        ret.startingState = True
+        ret.longitudinalTuning.kpBP = [0., 5., 30.]
+        ret.longitudinalTuning.kpV = [1.3, 1.0, 0.7]
+        ret.longitudinalTuning.kiBP = [0., 5., 20., 30.]
+        ret.longitudinalTuning.kiV = [0.36, 0.23, 0.17, 0.1]
+        ret.longitudinalTuning.deadzoneBP = [0.0, 30.0]
+        ret.longitudinalTuning.deadzoneV = [0.0, 0.03]
+        ret.longitudinalActuatorDelayLowerBound = 0.3
+        ret.longitudinalActuatorDelayUpperBound = 1.5
+        ret.flags |= MazdaFlags.RADAR_INTERCEPTOR.value
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_MAZDA_ENABLE_RI
       
     if candidate in GEN2:
       ret.experimentalLongitudinalAvailable = True
@@ -35,12 +51,8 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiV = [0.1, 0.1]
       ret.startingState = True
       ret.steerActuatorDelay = 0.1
-      
-    ret.radarUnavailable = True
 
     ret.dashcamOnly = False
-
-    
     ret.steerLimitTimer = 0.8
     ret.tireStiffnessFactor = 0.70   # not optimized yet
 

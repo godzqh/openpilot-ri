@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import StrEnum, IntFlag
 from typing import Dict, List, Union
 
 from cereal import car
@@ -38,6 +38,9 @@ class CarControllerParams:
       self.STEER_DRIVER_FACTOR = 1           # from dbc
       self.STEER_ERROR_MAX = 3500            # max delta between torque cmd and torque motor
 
+class MazdaFlags(IntFlag):
+  TORQUE_INTERCEPTOR = 1
+  RADAR_INTERCEPTOR = 2
 
 class TI_STATE:
   DISCOVER = 0
@@ -126,12 +129,12 @@ FW_QUERY_CONFIG = FwQueryConfig(
 
 
 DBC = {
-  CAR.CX5: dbc_dict('mazda_2017', None),
-  CAR.CX9: dbc_dict('mazda_2017', None),
-  CAR.MAZDA3: dbc_dict('mazda_2017', None),
-  CAR.MAZDA6: dbc_dict('mazda_2017', None),
-  CAR.CX9_2021: dbc_dict('mazda_2017', None),
-  CAR.CX5_2022: dbc_dict('mazda_2017', None),
+  CAR.CX5: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX9: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.MAZDA3: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.MAZDA6: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX9_2021: dbc_dict('mazda_2017', 'mazda_radar'),
+  CAR.CX5_2022: dbc_dict('mazda_2017', 'mazda_radar'),
   CAR.MAZDA3_2019: dbc_dict('mazda_2019', None),
   CAR.CX_30: dbc_dict('mazda_2019', None),
   CAR.CX_50: dbc_dict('mazda_2019', None),

@@ -2,7 +2,7 @@ from cereal import car
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits, apply_ti_steer_torque_limits
 from openpilot.selfdrive.car.mazda import mazdacan
-from openpilot.selfdrive.car.mazda.values import CarControllerParams, Buttons, GEN1
+from openpilot.selfdrive.car.mazda.values import CarControllerParams, Buttons, GEN1, MazdaFlags
 from openpilot.common.realtime import ControlsTimer as Timer
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -77,6 +77,11 @@ class CarController:
                                                         self.frame, ti_apply_steer))
       can_sends.append(mazdacan.create_steering_control(self.packer, self.CP.carFingerprint,
                                                       self.frame, apply_steer, CS.cam_lkas))
+      if self.CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
+        """ACC RADAR COMMAND"""                                                    
+        if self.frame % 2 == 0:
+          can_sends.extend(mazdacan.create_radar_command(self.packer, self.frame, CC, CS))
+
     else:
       resume = False
       hold = False

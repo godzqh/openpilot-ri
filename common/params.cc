@@ -416,6 +416,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"WheelIcon", PERSISTENT},
     {"WheelSpeed", PERSISTENT},
     {"EnableTI", PERSISTENT},
+    {"EnableRI", PERSISTENT},
     {"Upload_Driving_Logs", CLEAR_ON_ONROAD_TRANSITION},
 };
 

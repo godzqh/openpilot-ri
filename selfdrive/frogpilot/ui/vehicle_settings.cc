@@ -110,6 +110,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
     {"LongitudinalTune", "Longitudinal Tune", "Use a custom Toyota longitudinal tune.\n\nCydia = More focused on TSS-P vehicles but works for all Toyotas\n\nDragonPilot = Focused on TSS2 vehicles\n\nFrogPilot = Takes the best of both worlds with some personal tweaks focused around my 2019 Lexus ES 350", ""},
     {"SNGHack", "Stop and Go Hack", "Enable the 'Stop and Go' hack for vehicles without stock stop and go functionality.", ""},
     {"EnableTI", "Enable Torque Interceptor", "Use the TI hardware to steer the wheel", ""},
+    {"EnableRI", "Enable Radar Interceptor", " Use the RI cable to control the gas and brake", ""},
   };
 
   for (const auto &[param, title, desc, icon] : vehicleToggles) {

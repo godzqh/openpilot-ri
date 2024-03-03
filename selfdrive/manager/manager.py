@@ -238,6 +238,7 @@ def manager_init() -> None:
     ("WheelIcon", "3"),
     ("WheelSpeed", "0"),
     ("EnableTI", "1"),
+    ("EnableRI", "0"),
     ("UpdateSchedule", "1"),
     ("UpdateTime", "1")
   ]

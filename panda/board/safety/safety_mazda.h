@@ -2,12 +2,22 @@
 #define MAZDA_LKAS          0x243
 #define MAZDA_LKAS2         0x249
 #define MAZDA_LKAS_HUD      0x440
-#define MAZDA_CRZ_CTRL      0x21c
 #define MAZDA_CRZ_BTNS      0x09d
 #define TI_STEER_TORQUE     0x24A
 #define MAZDA_STEER_TORQUE  0x240
 #define MAZDA_ENGINE_DATA   0x202
 #define MAZDA_PEDALS        0x165
+
+// Radar
+#define MAZDA_CRZ_INFO      0x21B
+#define MAZDA_CRZ_CTRL      0x21c
+#define MAZDA_RADAR_361     0x361
+#define MAZDA_RADAR_362     0x362
+#define MAZDA_RADAR_363     0x363
+#define MAZDA_RADAR_364     0x364
+#define MAZDA_RADAR_365     0x365
+#define MAZDA_RADAR_366     0x366
+#define MAZDA_RADAR_499     0x499
 
 // CAN bus numbers
 #define MAZDA_MAIN 0
@@ -25,7 +35,10 @@ const SteeringLimits MAZDA_STEERING_LIMITS = {
   .type = TorqueDriverLimited,
 };
 
-const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8},{MAZDA_LKAS2, 1, 8}, {MAZDA_CRZ_BTNS, 0, 8}, {MAZDA_LKAS_HUD, 0, 8}};
+const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_LKAS2, 1, 8}, {MAZDA_CRZ_BTNS, 0, 8}, {MAZDA_LKAS_HUD, 0, 8},
+                                {MAZDA_CRZ_CTRL, 0, 8}, {MAZDA_CRZ_INFO, 0, 8}, {MAZDA_RADAR_361, 0, 8}, {MAZDA_RADAR_362, 0, 8},
+                                {MAZDA_RADAR_363, 0, 8}, {MAZDA_RADAR_364, 0, 8}, {MAZDA_RADAR_365, 0, 8}, {MAZDA_RADAR_366, 0, 8}, 
+                                {MAZDA_RADAR_499, 0, 8}};
 
 RxCheck mazda_rx_checks[] = {
   {.msg = {{MAZDA_CRZ_CTRL,     0, 8, .frequency = 50U}, { 0 }, { 0 }}},
@@ -44,6 +57,23 @@ RxCheck mazda_ti_rx_checks[] = {
   {.msg = {{TI_STEER_TORQUE,    1, 8, .frequency = 50U}, { 0 }, { 0 }}},
 };
 
+RxCheck mazda_ti_ri_rx_checks[] = {
+  {.msg = {{MAZDA_CRZ_CTRL,     2, 8, .frequency = 50U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_CRZ_BTNS,     0, 8, .frequency = 10U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_STEER_TORQUE, 0, 8, .frequency = 83U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_ENGINE_DATA,  0, 8, .frequency = 100U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_PEDALS,       0, 8, .frequency = 50U}, { 0 }, { 0 }}},
+  {.msg = {{TI_STEER_TORQUE,    1, 8, .frequency = 50U}, { 0 }, { 0 }}},
+};
+
+RxCheck mazda_ri_rx_checks[] = {
+  {.msg = {{MAZDA_CRZ_CTRL,     2, 8, .frequency = 50U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_CRZ_BTNS,     0, 8, .frequency = 10U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_STEER_TORQUE, 0, 8, .frequency = 83U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_ENGINE_DATA,  0, 8, .frequency = 100U}, { 0 }, { 0 }}},
+  {.msg = {{MAZDA_PEDALS,       0, 8, .frequency = 50U}, { 0 }, { 0 }}},
+};
+
 /*
 bool valid = addr_safety_check(to_push, &mazda_rx_checks, NULL, NULL, NULL, NULL);
   if (((GET_ADDR(to_push) == TI_STEER_TORQUE)) &&
@@ -55,7 +85,9 @@ bool valid = addr_safety_check(to_push, &mazda_rx_checks, NULL, NULL, NULL, NULL
   if (valid && ((int)GET_BUS(to_push) == MAZDA_MAIN)) {
 */
 bool enable_ti = false;
+bool enable_ri = false;
 const uint16_t MAZDA_PARAM_ENABLE_TI = 1;
+const uint16_t MAZDA_PARAM_ENABLE_RI = 1;
 
 // track msgs coming from OP so that we know what CAM msgs to drop and what to forward
 static void mazda_rx_hook(const CANPacket_t *to_push) {
@@ -87,6 +119,10 @@ static void mazda_rx_hook(const CANPacket_t *to_push) {
 
     if (addr == MAZDA_PEDALS) {
       brake_pressed = (GET_BYTE(to_push, 0) & 0x10U);
+      if (enable_ri) {
+        bool cruise_engaged = GET_BYTE(to_push, 0) & 0x8U;
+        pcm_cruise_check(cruise_engaged);
+      }
     }
 
     generic_rx_checks((addr == MAZDA_LKAS));
@@ -99,6 +135,7 @@ static void mazda_rx_hook(const CANPacket_t *to_push) {
       update_sample(&torque_driver, torque_driver_new);
       torque_interceptor_detected = 1;
     }
+
   }
 }
 
@@ -142,6 +179,16 @@ static int mazda_fwd_hook(int bus, int addr) {
     }
   } else if (bus == MAZDA_CAM) {
     block |= (addr == MAZDA_LKAS) || (addr == MAZDA_LKAS_HUD);
+    if (enable_ri) {
+      block |= (addr == MAZDA_CRZ_INFO);
+      block |= (addr == MAZDA_CRZ_CTRL);
+      block |= (addr == MAZDA_RADAR_361);
+      block |= (addr == MAZDA_RADAR_362);
+      block |= (addr == MAZDA_RADAR_363);
+      block |= (addr == MAZDA_RADAR_364);
+      block |= (addr == MAZDA_RADAR_365);
+      block |= (addr == MAZDA_RADAR_366);
+    }
     if (!block) {
       bus_fwd = MAZDA_MAIN;
     }
@@ -155,8 +202,13 @@ static int mazda_fwd_hook(int bus, int addr) {
 static safety_config mazda_init(uint16_t param) {
   safety_config ret;
   enable_ti = GET_FLAG(param, MAZDA_PARAM_ENABLE_TI);
-  if (enable_ti) {
+  enable_ri = GET_FLAG(param, MAZDA_PARAM_ENABLE_RI);
+  if (enable_ri && enable_ti) {
+    ret = BUILD_SAFETY_CFG(mazda_ti_ri_rx_checks, MAZDA_TX_MSGS);
+  } else if (enable_ti) {
     ret = BUILD_SAFETY_CFG(mazda_ti_rx_checks, MAZDA_TX_MSGS);
+  } else if (enable_ri) {
+    ret = BUILD_SAFETY_CFG(mazda_ri_rx_checks, MAZDA_TX_MSGS);
   } else {
     ret = BUILD_SAFETY_CFG(mazda_rx_checks, MAZDA_TX_MSGS);
   }
