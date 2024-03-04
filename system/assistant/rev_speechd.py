@@ -51,7 +51,10 @@ class SpeechToTextProcessor:
     self.awc = AssistantWidgetControl()
     self.sm = messaging.SubMaster(['microphoneRaw'])
     media_config = MediaConfig('audio/x-raw', 'interleaved', 16000, 'S16LE', 1)
-    self.streamclient = RevAiStreamingClient(self.reva_access_token, media_config)
+    try:
+      self.streamclient = RevAiStreamingClient(self.reva_access_token, media_config)
+    except Exception as e:
+      print(f"An error occurred: {e}")
     self.p = Params()
     self.error = False
 
@@ -115,6 +118,7 @@ class SpeechToTextProcessor:
                                              remove_disfluencies=True, # remove umms
                                              filter_profanity=True, # brand integridity or something
                                              detailed_partials=False, # don't need time stamps
+                                             max_segment_duration_seconds=5,
                                             )
       final_transcript = self.listen_print_loop(response_gen, final_transcript)
     except _exceptions.WebSocketAddressException as e:

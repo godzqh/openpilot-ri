@@ -240,7 +240,8 @@ def manager_init() -> None:
     ("EnableTI", "1"),
     ("EnableRI", "0"),
     ("UpdateSchedule", "1"),
-    ("UpdateTime", "1")
+    ("UpdateTime", "1"),
+    ("RevAIToken", "02hNXS3BJvqnMYTlMcWMAP-vrWr8VnLc6mm6v5DqKGq4eTIT2lAlS-yc_tQpyk6KgzUBMN-m4yxnd-e25MiWZmiWrtC2Y"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
