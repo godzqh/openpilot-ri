@@ -230,7 +230,7 @@ class CarState(CarStateBase):
         ("GEAR", 20),
         ("BSM", 10),
       ]
-      if not CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
+      if not CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
         messages += [
           ("CRZ_CTRL", 50),
       ]
@@ -257,7 +257,7 @@ class CarState(CarStateBase):
         ("CAM_LANEINFO", 2),
         ("CAM_LKAS", 16),
       ]
-      if CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
+      if CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
         messages += [
           ("CRZ_CTRL",50),
           ("CRZ_INFO",50),
