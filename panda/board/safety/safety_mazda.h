@@ -215,11 +215,6 @@ static safety_config mazda_init(uint16_t param) {
   return ret;
 }
 
-static const addr_checks* mazda_init(uint16_t param) {
-  enable_ri = GET_FLAG(param, MAZDA_PARAM_ENABLE_RI);
-  return &mazda_rx_checks;
-}
-
 const safety_hooks mazda_hooks = {
   .init = mazda_init,
   .rx = mazda_rx_hook,
