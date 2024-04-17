@@ -21,7 +21,8 @@ class CarState(CarStateBase):
     self.lkas_disabled = False
     self.cam_lkas = 0
     self.params = CarControllerParams(CP)
-    
+    self.radar_intercept_mode = CP.flags & MazdaFlags.RADAR_INTERCEPTOR
+
     self.ti_ramp_down = False
     self.ti_version = 1
     self.ti_state = TI_STATE.RUN
@@ -157,7 +158,7 @@ class CarState(CarStateBase):
     ret.cruiseState.standstill = cp.vl["PEDALS"]["STANDSTILL"] == 1
     ret.cruiseState.speed = cp.vl["CRZ_EVENTS"]["CRZ_SPEED"] * CV.KPH_TO_MS
 
-    if self.CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
+    if self.radar_intercept_mode:
       self.crz_info = copy.copy(cp_cam.vl["CRZ_INFO"])
       self.crz_cntr = copy.copy(cp_cam.vl["CRZ_CTRL"])
       ret.cruiseState.enabled = cp.vl["PEDALS"]["ACC_ACTIVE"] == 1
@@ -230,7 +231,7 @@ class CarState(CarStateBase):
         ("GEAR", 20),
         ("BSM", 10),
       ]
-      if not CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
+      if not (CP.flags & MazdaFlags.RADAR_INTERCEPTOR):
         messages += [
           ("CRZ_CTRL", 50),
       ]
@@ -257,7 +258,7 @@ class CarState(CarStateBase):
         ("CAM_LANEINFO", 2),
         ("CAM_LKAS", 16),
       ]
-      if CP.flags & MazdaFlags.RADAR_INTERCEPTOR.value:
+      if (CP.flags & MazdaFlags.RADAR_INTERCEPTOR):
         messages += [
           ("CRZ_CTRL",50),
           ("CRZ_INFO",50),
