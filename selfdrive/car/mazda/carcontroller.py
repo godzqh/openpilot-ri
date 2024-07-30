@@ -71,7 +71,7 @@ class CarController(CarControllerBase):
 
       if self.CP.flags & MazdaFlags.RADAR_INTERCEPTOR:
         if self.frame % 2 == 0:
-          can_sends.extend(mazdacan.create_radar_command(self.packer, self.frame, CC, CS, hold))
+          can_sends.extend(mazdacan.create_radar_command(self.packer, self.frame, CC, CS, self.CP))
 
     else:
       resume = False
