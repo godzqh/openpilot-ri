@@ -177,7 +177,7 @@ STATIC_DATA_365 = [0xFFF7FE7F, 0xFBFF3FC]
 STATIC_DATA_366 = [0xFFF7FE7F, 0xFBFF3FC]
 static_data_list = [STATIC_DATA_361, STATIC_DATA_362, STATIC_DATA_363, STATIC_DATA_364, STATIC_DATA_365, STATIC_DATA_366]
 
-def create_radar_command(packer, frame, CC, CS, hold):
+def create_radar_command(packer, frame, CC, CS, CP):
   accel = 0
   ret = []
   crz_ctrl = CS.crz_cntr
