@@ -47,7 +47,8 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     {"DeviceManagement", tr("Device Management"), tr("Tweak your device's behaviors to your personal preferences."), "../frogpilot/assets/toggle_icons/icon_device.png"},
     {"DeviceShutdown", tr("Device Shutdown Timer"), tr("Configure how quickly the device shuts down after going offroad."), ""},
     {"NoLogging", tr("Disable Logging"), tr("Turn off all data tracking to enhance privacy or reduce thermal load."), ""},
-    {"NoUploads", tr("Disable Uploads"), tr("Turn off all data uploads to comma's servers."), ""},
+    {"NoUploads", tr("Disable Uploads"), tr("Turn off all data uploads to servers."), ""},
+    {"UseFrogServer", tr("Switch to FrogPilot Server"), tr("Use the Frogpilot connect instead of Comma connect"), ""},
     {"IncreaseThermalLimits", tr("Increase Thermal Safety Limit"), tr("Allow the device to run at a temperature above comma's recommended thermal limits."), ""},
     {"LowVoltageShutdown", tr("Low Voltage Shutdown Threshold"), tr("Automatically shut the device down when your battery reaches a specific voltage level to prevent killing your battery."), ""},
     {"OfflineMode", tr("Offline Mode"), tr("Allow the device to be offline indefinitely."), ""},
@@ -1137,6 +1138,33 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
       FrogPilotConfirmationDialog::toggleAlert(
         tr("To activate 'Traffic Mode' you hold down the 'distance' button on your steering wheel for 2.5 seconds."),
         tr("Sounds good!"), this);
+    }
+  });
+
+  QObject::connect(static_cast<ToggleControl*>(toggles["UseFrogServer"]), &ToggleControl::toggleFlipped, [this](bool state) {
+    const QString enable_promt_text = tr("By keeping this toggle enabled, you agree to the following: "
+           "We collect, use, and share information from and about you and your vehicle in connection with OpenPilot or variations thereof. "
+           "This information may be accessed by third parties without additional notice or consent, for purposes including, but not limited to, "
+           "providing OpenPilot services, data collection, software updates, safety and cybersecurity measures, and the suspension or removal of your account. "
+           "Further details are outlined in our Privacy Policy (available at https://frogpilot.wiki.gg/wiki/privacy).");
+    if (state) {
+      if (ConfirmationDialog(enable_promt_text, tr("I agree"), tr("I do not agree"), true, this).exec()) {
+        if (ConfirmationDialog(tr("Make sure you are connected to the internet before rebooting!"), tr("Reboot now"), tr("Reboot later"), false, this).exec()) {
+          Hardware::reboot();
+        }
+      } else {
+        params.putBool("UseFrogServer", false);
+      }
+    } else {
+      if (ConfirmationDialog(tr("Are you sure you want to connect to commas servers?"), tr("Yes and reboot"), tr("Use FrogPilot server"), false, this).exec()) {
+        if (ConfirmationDialog(tr("Do you want to clear all your driving logs before switching?"), tr("Delete and reboot"), tr("No, keep data"), false, this).exec()) {
+          std::system("rm -rf /data/media/0/realdata");
+          util::sleep_for(5000);
+        }
+        Hardware::reboot();
+      } else {
+        params.putBool("UseFrogServer", true);
+      }
     }
   });
 
