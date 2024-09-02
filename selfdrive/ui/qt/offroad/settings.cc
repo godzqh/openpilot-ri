@@ -48,6 +48,30 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "",
       "../assets/img_experimental_white.svg",
     },
+        {
+      "TorqueInterceptorEnabled",
+      tr("Torque Interceptor Installed"),
+      tr("Enable the torque interceptor to control the steering wheel."),
+      "../assets/offroad/icon_openpilot.png",
+    },
+    {
+      "RadarInterceptorEnabled",
+      tr("Radar Interceptor Installed"),
+      tr("Enable if you have installed the radar Iterceptor."),
+      "../assets/offroad/icon_openpilot.png",
+    },
+    {
+      "NoMRCC",
+      tr("Car Does not have stock MRCC"),
+      tr("Enable if your car does not have stock MRCC."),
+      "../assets/offroad/icon_openpilot.png",
+    },
+    {
+      "NoFSC",
+      tr("Car Does not have stock FSC"),
+      tr("Enable if your car does not have stock FSC."),
+      "../assets/offroad/icon_openpilot.png",
+    },
     {
       "DisengageOnAccelerator",
       tr("Disengage on Accelerator Pedal"),
@@ -64,6 +88,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "RecordFront",
       tr("Record and Upload Driver Camera"),
       tr("Upload data from the driver facing camera and help improve the driver monitoring algorithm."),
+      "../assets/offroad/icon_monitoring.png",
+    },
+    {
+      "RecordBack",
+      tr("Record and Upload Road Cameras"),
+      tr("Upload data from the road cameras."),
       "../assets/offroad/icon_monitoring.png",
     },
     {
@@ -295,8 +325,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
 
   // Delete driving footage
   ButtonControl *deleteDrivingDataBtn = new ButtonControl(tr("Delete Driving Data"), tr("DELETE"), tr("This button provides a swift and secure way to permanently delete all "
-    "stored driving footage and data from your device. Ideal for maintaining privacy or freeing up space.")
-  );
+    "stored driving footage and data from your device. Ideal for maintaining privacy or freeing up space."));
   connect(deleteDrivingDataBtn, &ButtonControl::clicked, [=]() {
     if (ConfirmationDialog::confirm(tr("Are you sure you want to permanently delete all of your driving footage and data?"), tr("Delete"), this)) {
       std::thread([&] {
