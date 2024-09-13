@@ -570,6 +570,9 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"RadarInterceptorEnabled", PERSISTENT},
     {"NoMRCC", PERSISTENT},
     {"NoFSC", PERSISTENT},
+    {"ExperimentalLongTune", PERSISTENT},
+    {"LongOutputGain", PERSISTENT},
+    {"BlendedACC", PERSISTENT},
 };
 
 } // namespace
