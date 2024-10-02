@@ -49,6 +49,14 @@ constexpr vec3 default_face_kpts_3d[] = {
   {18.02, -49.14, 8.00}, {6.36, -51.20, 8.00}, {-5.98, -51.20, 8.00},
 };
 
+static const char *onroad_alert_strings[] = {
+  QT_TRANSLATE_NOOP("OnroadAlerts", "openpilot Unavailable"),
+  QT_TRANSLATE_NOOP("OnroadAlerts", "Waiting for controls to start"),
+  QT_TRANSLATE_NOOP("OnroadAlerts", "TAKE CONTROL IMMEDIATELY"),
+  QT_TRANSLATE_NOOP("OnroadAlerts", "Controls Unresponsive"),
+  QT_TRANSLATE_NOOP("OnroadAlerts", "Controls Unresponsive"),
+  QT_TRANSLATE_NOOP("OnroadAlerts", "Reboot Device"),
+};
 
 typedef enum UIStatus {
   STATUS_DISENGAGED,
