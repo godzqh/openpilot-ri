@@ -23,7 +23,6 @@ private:
   QColor bg = bg_colors[STATUS_DISENGAGED];
   QWidget *map = nullptr;
   QHBoxLayout* split;
-  QString translateAlertText(const QString &text);
 
   // FrogPilot variables
   bool blindSpotLeft;

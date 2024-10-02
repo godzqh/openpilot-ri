@@ -38,6 +38,7 @@ protected:
   };
 
   void paintEvent(QPaintEvent*) override;
+  QString translateAlertText(const QString &text);
   OnroadAlerts::Alert getAlert(const SubMaster &sm, uint64_t started_frame, bool force_onroad);
 
   QColor bg;

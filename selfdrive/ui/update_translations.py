@@ -4,7 +4,7 @@ import json
 import os
 
 from openpilot.common.basedir import BASEDIR
-from cereal import car, messaging
+from cereal import car, log, messaging
 from cereal.services import SERVICE_LIST
 from openpilot.selfdrive.controls.lib.events import EVENTS, Alert
 
@@ -19,18 +19,21 @@ def generate_onroad_alert_translations():
   cs = car.CarState.new_message()
   sm = messaging.SubMaster(list(SERVICE_LIST.keys()))
   translated = set()
-  for event in EVENTS.values():
-    for alert in event.values():
-      if not isinstance(alert, Alert):
-        alert = alert(cp, cs, sm, False, 0)
-      for text in (alert.alert_text_1, alert.alert_text_2):
-        text = text.split('|')[0]
-        if (text and text not in translated):
-          translated.add(text)
-
+  for i in range(3):
+    pers = {v: k for k, v in log.LongitudinalPersonality.schema.enumerants.items()}[i]
+    for event in EVENTS.values():
+      for alert in event.values():
+        if not isinstance(alert, Alert):
+          alert = alert(cp, cs, sm, False, 0, pers)
+        for text in (alert.alert_text_1, alert.alert_text_2):
+          text = text.split('|')[0]
+          if (text and text not in translated):
+            translated.add(text)
   content = '\n// onroad alerts\n'
   for text in sorted(translated):
     content += f'QT_TRANSLATE_NOOP("OnroadAlerts", R"({text})");\n'
+  # for onebyone in sorted(translated): # DEBUG
+  #   print(onebyone)
   return content
 
 def generate_offroad_alerts_translations():
